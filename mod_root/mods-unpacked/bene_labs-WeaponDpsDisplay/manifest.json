@@ -1,0 +1,17 @@
+{
+	"name": "WeaponDpsDisplay",
+	"namespace": "bene_labs",
+	"version_number": "0.1.0",
+	"description": "Displays the potential DPS for all weapons.",
+	"website_url": "",
+	"dependencies": [],
+	"extra": {
+		"godot": {
+			"incompatibilities": [],
+			"authors": [ "bene_labs" ],
+			"compatible_mod_loader_version": [ "6.0.0" ],
+			"compatible_game_version": [ "1.0.0.3" ],
+			"config_defaults": {}
+		}
+	}
+}
