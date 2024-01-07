@@ -1,6 +1,20 @@
 extends "res://weapons/weapon_stats/weapon_stats.gd"
 
 
+var pierces_on_crit = 0
+var bounces_on_crit = 0
+
+
+func set_effects(effects : Array):
+	for effect in effects:
+		match effect.key:
+			"effect_pierce_on_crit":
+				pierces_on_crit = effect.value
+			"effect_bounce_on_crit":
+				bounces_on_crit = effect.value
+	print(bounces_on_crit)
+
+
 func get_text(base_stats: Resource) -> String:
 	var text = .get_text(base_stats)
 	var base_dps = get_base_dps(base_stats)
@@ -57,8 +71,17 @@ func get_average_damage(stats: Resource) -> float:
 		for i in range(stats.bounce):
 			bounce_damage -= bounce_damage * stats.bounce_dmg_reduction
 			dmg += max(1, bounce_damage)
+		var on_crit_bounce_damage = bounce_damage
+		if bounces_on_crit > 0:
+			for i in range(bounces_on_crit):
+				on_crit_bounce_damage -= on_crit_bounce_damage * stats.bounce_dmg_reduction
+				dmg += max(1, on_crit_bounce_damage)
+			bounce_damage = bounce_damage - bounce_damage * (stats.piercing_dmg_reduction * stats.crit_chance)
 		var pierce_damage = bounce_damage - bounce_damage * stats.piercing_dmg_reduction
 		for i in range(stats.piercing):
+			dmg += max(1, pierce_damage)
+			pierce_damage -= pierce_damage * stats.piercing_dmg_reduction
+		for i in range(pierces_on_crit):
 			dmg += max(1, pierce_damage)
 			pierce_damage -= pierce_damage * stats.piercing_dmg_reduction
 		dmg *= stats.nb_projectiles
