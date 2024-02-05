@@ -14,7 +14,7 @@ func set_effects(effects : Array):
 				pierces_on_crit = effect.value
 			"effect_bounce_on_crit":
 				bounces_on_crit = effect.value
-			"effect_projectiles_on_hit", "effect_slow_projectiles_on_hit":
+			"effect_projectiles_on_hit", "effect_slow_projectiles_on_hit", "effect_lightning_on_hit":
 				projectiles_on_impact_stats = effect.weapon_stats
 				projectiles_on_impact_stats.nb_projectiles = effect.value
 
