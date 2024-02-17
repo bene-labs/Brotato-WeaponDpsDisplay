@@ -61,8 +61,11 @@ func get_dps(extra_damage : int = 0) -> float:
 	damage += extra_damage
 	
 	if additional_cooldown_every_x_shots > 0:
-		atk_speed = (atk_speed * (additional_cooldown_every_x_shots - 1.0) + \
-				atk_speed * additional_cooldown_multiplier) / additional_cooldown_every_x_shots
+		var additional_cooldown_stats = self.duplicate()
+		additional_cooldown_stats.cooldown *= additional_cooldown_multiplier
+		var additional_atk_speed = additional_cooldown_stats.get_cooldown_value(additional_cooldown_stats)
+		atk_speed = (atk_speed * (additional_cooldown_every_x_shots - 1.0) + additional_atk_speed) \
+				/ additional_cooldown_every_x_shots
 	var dps = stepify(get_average_damage(self) / atk_speed, 0.01)
 	if projectiles_on_impact_stats != null:
 		var scale_damage = WeaponService.get_scaling_stats_value(projectiles_on_impact_stats.scaling_stats)
