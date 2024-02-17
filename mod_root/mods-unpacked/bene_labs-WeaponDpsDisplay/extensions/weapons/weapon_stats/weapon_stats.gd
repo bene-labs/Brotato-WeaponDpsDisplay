@@ -108,7 +108,7 @@ func get_average_damage(stats: Resource) -> float:
 			pierce_damage -= pierce_damage * stats.piercing_dmg_reduction
 		dmg *= stats.nb_projectiles
 	if stats.crit_chance > 0:
-		dmg = dmg * (1 - stats.crit_chance) + (dmg * stats.crit_damage) * stats.crit_chance
+		dmg = dmg * (1 - stats.crit_chance) + round(dmg * stats.crit_damage) * stats.crit_chance
 	return dmg
 
 
