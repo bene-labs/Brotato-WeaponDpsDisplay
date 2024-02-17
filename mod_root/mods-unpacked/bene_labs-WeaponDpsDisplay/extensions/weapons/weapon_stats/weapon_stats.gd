@@ -78,8 +78,11 @@ func get_dps(extra_damage : int = 0) -> float:
 func get_base_dps(base_stats: Resource) -> float:
 	var atk_speed =  get_base_cooldown_value(base_stats)
 	if base_stats.additional_cooldown_every_x_shots > 0:
-		atk_speed = (atk_speed * (base_stats.additional_cooldown_every_x_shots - 1.0) + \
-				atk_speed * base_stats.additional_cooldown_multiplier) / base_stats.additional_cooldown_every_x_shots
+		var additional_cooldown_stats = base_stats.duplicate()
+		additional_cooldown_stats.cooldown *= additional_cooldown_multiplier
+		var additional_atk_speed = additional_cooldown_stats.get_cooldown_value(additional_cooldown_stats)
+		atk_speed = (atk_speed * (base_stats.additional_cooldown_every_x_shots - 1.0) + additional_atk_speed) \
+				/ base_stats.additional_cooldown_every_x_shots
 	
 	var base_dps = stepify(get_average_damage(base_stats) / atk_speed, 0.01)
 	if projectiles_on_impact_stats != null:
