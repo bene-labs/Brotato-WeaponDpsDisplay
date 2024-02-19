@@ -125,13 +125,17 @@ func get_burning_dps_pet_stack(stats: Resource) -> float:
 	return stepify(burn_damage_per_second, 0.01)
 
 
+# The result from this is crazy high, but this is due to it being extremly unlike to actually get close to the max burn dps
+# I might still change this later, not sure how helpful it really is...
 func get_max_burning_dps(stats: Resource) -> float:
 	var burning = stats.burning_data
 	var burn_speed = 1.0 - (RunData.effects["burning_cooldown_reduction"] / 100.0)
 	var atk_speed = get_average_atk_speed(stats)
-	var new_burn_damage_per_second = burning.chance * burning.damage / atk_speed / burn_speed * (1 + burning.spread)
-	
+	var new_burn_damage_per_second = min(1.0, burning.chance) * burning.damage / atk_speed / burn_speed
+	new_burn_damage_per_second *= 1 + burning.spread
 	if stats is RangedWeaponStats:
+		new_burn_damage_per_second *= 1 + stats.bounce
+		new_burn_damage_per_second *= 1 + stats.piercing
 		new_burn_damage_per_second *= stats.nb_projectiles
 	# Burn duration is accounted for as it might cause multiple stacks of burn damage to go off in the same second
 	return stepify(new_burn_damage_per_second + (burning.duration - atk_speed) * new_burn_damage_per_second, 0.01)
