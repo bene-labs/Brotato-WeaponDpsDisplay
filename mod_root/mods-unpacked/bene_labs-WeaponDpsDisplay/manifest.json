@@ -3,7 +3,7 @@
 	"namespace": "bene_labs",
 	"version_number": "0.3.0",
 	"description": "Displays the potential DPS for all weapons.",
-	"website_url": "",
+	"website_url": "https://github.com/bene-labs/Brotato-WeaponDpsDisplay",
 	"dependencies": [],
 	"extra": {
 		"godot": {
