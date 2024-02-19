@@ -4,7 +4,7 @@ const MOD_DIR = "bene_labs-WeaponDpsDisplay/"
 const MENUSTRING_LOG = "bene_labs-WeaponDpsDisplay"
 
 func _init(modLoader = ModLoader):
-	ModLoaderUtils.log_info("Init", MENUSTRING_LOG)
+	ModLoaderLog.info("Init", MENUSTRING_LOG)
 
 	modLoader.install_script_extension(\
 		"res://mods-unpacked/bene_labs-WeaponDpsDisplay/extensions/items/global/weapon_data.gd")
@@ -17,4 +17,4 @@ func _init(modLoader = ModLoader):
 
 
 func _ready():
-	ModLoaderUtils.log_info("Ready", MENUSTRING_LOG)
+	ModLoaderLog.info("Ready", MENUSTRING_LOG)

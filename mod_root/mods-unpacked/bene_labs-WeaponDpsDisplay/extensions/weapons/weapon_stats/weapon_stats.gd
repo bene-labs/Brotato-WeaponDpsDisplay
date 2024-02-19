@@ -43,7 +43,7 @@ func get_base_dps_text(base_stats: Resource) -> String:
 
 
 func get_dps_text(base_dps : float) -> String:
-	var dps = get_dps()
+	var dps = get_dps() # if RunData.effects["can_attack_while_moving"] else 0.0
 	var a = get_signed_col_a(dps, base_dps)
 	var difference_str = ("+" if dps > base_dps else "") + \
 			str(stepify((dps - base_dps) / base_dps * 100, 0.01))
@@ -120,7 +120,7 @@ func get_burning_dps_pet_stack(stats: Resource) -> float:
 	var burning = stats.burning_data
 	var burn_speed = 1.0 - (RunData.effects["burning_cooldown_reduction"] / 100.0)
 	var atk_speed = get_average_atk_speed(stats)
-	var burn_damage_per_second = burning.chance * burning.damage / burn_speed
+	var burn_damage_per_second = burning.damage / burn_speed if burning.chance > 0.0 else 0.0
 	
 	return stepify(burn_damage_per_second, 0.01)
 
