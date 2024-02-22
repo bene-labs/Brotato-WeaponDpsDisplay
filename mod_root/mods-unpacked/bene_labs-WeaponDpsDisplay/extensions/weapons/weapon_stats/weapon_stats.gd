@@ -94,22 +94,22 @@ func get_average_damage(stats: Resource) -> float:
 	if stats is RangedWeaponStats:
 		var bounce_damage : float = dmg
 		for i in range(stats.bounce):
-			bounce_damage = round(bounce_damage - bounce_damage * stats.bounce_dmg_reduction)
+			bounce_damage = int(bounce_damage - bounce_damage * stats.bounce_dmg_reduction)
 			dmg += max(1, bounce_damage)
 		var on_crit_bounce_damage = bounce_damage
 		if bounces_on_crit > 0:
 			for i in range(bounces_on_crit):
-				on_crit_bounce_damage = round(on_crit_bounce_damage - on_crit_bounce_damage * \
+				on_crit_bounce_damage = int(on_crit_bounce_damage - on_crit_bounce_damage * \
 						stats.bounce_dmg_reduction)
 				dmg += max(1, on_crit_bounce_damage)
 			bounce_damage = bounce_damage - bounce_damage * (stats.bounce_dmg_reduction * stats.crit_chance)
-		var pierce_damage : float = round(bounce_damage - bounce_damage * stats.piercing_dmg_reduction)
+		var pierce_damage : float = int(bounce_damage - bounce_damage * stats.piercing_dmg_reduction)
 		for i in range(stats.piercing):
 			dmg += max(1, pierce_damage)
-			pierce_damage = round(pierce_damage - pierce_damage * stats.piercing_dmg_reduction)
+			pierce_damage = int(pierce_damage - pierce_damage * stats.piercing_dmg_reduction)
 		for i in range(pierces_on_crit):
 			dmg += max(1, pierce_damage)
-			pierce_damage = round(pierce_damage - pierce_damage * stats.piercing_dmg_reduction)
+			pierce_damage = int(pierce_damage - pierce_damage * stats.piercing_dmg_reduction)
 		dmg *= stats.nb_projectiles
 	if stats.crit_chance > 0:
 		dmg = dmg * (1 - stats.crit_chance) + round(dmg * stats.crit_damage) * stats.crit_chance
