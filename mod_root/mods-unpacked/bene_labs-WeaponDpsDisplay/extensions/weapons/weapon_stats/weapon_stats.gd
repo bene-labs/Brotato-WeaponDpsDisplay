@@ -26,6 +26,11 @@ func get_text(base_stats: Resource) -> String:
 	text += "\n" + Text.text("STAT_FORMATTED", [get_col_a() + tr("WEAPON_DPS") + col_b, \
 			get_dps_text(base_dps)])
 	
+	var stand_still_dps = try_get_stand_still_dps()
+	if stand_still_dps:
+		text += "\n" + Text.text("STAT_FORMATTED", [get_col_a() + tr("STAND_STILL_DPS") + col_b, \
+				get_signed_col_a(stand_still_dps, get_dps()) + str(stand_still_dps) + col_b])
+	
 	var burn_dps_per_stack = get_burning_dps_pet_stack(self)
 	var max_burn_dps = get_max_burning_dps(self)
 	if burn_dps_per_stack > 0:
@@ -43,7 +48,7 @@ func get_base_dps_text(base_stats: Resource) -> String:
 
 
 func get_dps_text(base_dps : float) -> String:
-	var dps = get_dps() # if RunData.effects["can_attack_while_moving"] else 0.0
+	var dps = get_dps() if RunData.effects["can_attack_while_moving"] else 0.0
 	var a = get_signed_col_a(dps, base_dps)
 	var difference_str = ("+" if dps > base_dps else "") + \
 			str(stepify((dps - base_dps) / base_dps * 100, 0.01))
@@ -52,6 +57,26 @@ func get_dps_text(base_dps : float) -> String:
 		text += get_init_a() + str(base_dps) + col_b
 		text += " (" + a + difference_str + "%" + col_b + ")"  
 	return text
+
+
+func try_get_stand_still_dps():
+	var stand_still_damage_multiplier = null
+	var stand_still_cooldown_multiplier = null
+	
+	for temp_stat_while_not_moving in RunData.effects["temp_stats_while_not_moving"]:
+		if temp_stat_while_not_moving[0] == "stat_percent_damage":
+			stand_still_damage_multiplier = temp_stat_while_not_moving[1] / 100.0
+		elif temp_stat_while_not_moving[0] == "stat_attack_speed":
+			stand_still_cooldown_multiplier = temp_stat_while_not_moving[1] / 100.0
+	if stand_still_damage_multiplier == null and stand_still_cooldown_multiplier == null:
+		return false
+	
+	var stand_still_stats = self.duplicate()
+	if stand_still_damage_multiplier:
+		stand_still_stats.damage += stand_still_stats.damage * stand_still_damage_multiplier
+	if stand_still_cooldown_multiplier:
+		stand_still_stats.cooldown *= 1.0 / (1.0 + stand_still_cooldown_multiplier)
+	return stand_still_stats.get_dps()
 
 
 func get_average_atk_speed(stats: Resource):
@@ -91,28 +116,34 @@ func get_base_dps(base_stats: Resource) -> float:
 func get_average_damage(stats: Resource) -> float:
 	var dmg = stats.damage
 	
+	if min(1.0, stats.crit_chance) > 0:
+		dmg = dmg * (1.0 - min(1.0, stats.crit_chance)) + round(dmg * stats.crit_damage) * min(1.0, stats.crit_chance)
 	if stats is RangedWeaponStats:
-		var bounce_damage : float = dmg
+		var bounce_damage : float = stats.damage
 		for i in range(stats.bounce):
 			bounce_damage = int(bounce_damage - bounce_damage * stats.bounce_dmg_reduction)
-			dmg += max(1, bounce_damage)
-		var on_crit_bounce_damage = bounce_damage
+			dmg += max(1, bounce_damage * (1.0 - min(1.0, stats.crit_chance)) + \
+					round(bounce_damage * stats.crit_damage) * min(1.0, stats.crit_chance))
 		if bounces_on_crit > 0:
+			var on_crit_bounce_damage = bounce_damage
 			for i in range(bounces_on_crit):
 				on_crit_bounce_damage = int(on_crit_bounce_damage - on_crit_bounce_damage * \
 						stats.bounce_dmg_reduction)
-				dmg += max(1, on_crit_bounce_damage)
-			bounce_damage = bounce_damage - bounce_damage * (stats.bounce_dmg_reduction * stats.crit_chance)
-		var pierce_damage : float = int(bounce_damage - bounce_damage * stats.piercing_dmg_reduction)
+				dmg += max(1, round(on_crit_bounce_damage * stats.crit_damage) * min(1.0, stats.crit_chance))
+			bounce_damage = bounce_damage - bounce_damage * (stats.bounce_dmg_reduction * min(1.0, stats.crit_chance))
+		
+		var pierce_damage : float = bounce_damage
 		for i in range(stats.piercing):
-			dmg += max(1, pierce_damage)
 			pierce_damage = int(pierce_damage - pierce_damage * stats.piercing_dmg_reduction)
+			dmg += max(1, pierce_damage * (1.0 - min(1.0, stats.crit_chance)) + \
+					round(pierce_damage * stats.crit_damage) * min(1.0, stats.crit_chance))
+		var on_crit_pierce_damage = pierce_damage
 		for i in range(pierces_on_crit):
-			dmg += max(1, pierce_damage)
-			pierce_damage = int(pierce_damage - pierce_damage * stats.piercing_dmg_reduction)
+			on_crit_pierce_damage = int(on_crit_pierce_damage - on_crit_pierce_damage * \
+					stats.piercing_dmg_reduction)
+			dmg += max(1, round(on_crit_pierce_damage * stats.crit_damage) * min(1.0, stats.crit_chance))
+		
 		dmg *= stats.nb_projectiles
-	if stats.crit_chance > 0:
-		dmg = dmg * (1 - stats.crit_chance) + round(dmg * stats.crit_damage) * stats.crit_chance
 	return dmg
 
 

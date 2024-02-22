@@ -1,7 +1,7 @@
 {
 	"name": "WeaponDpsDisplay",
 	"namespace": "bene_labs",
-	"version_number": "0.3.0",
+	"version_number": "0.4.0",
 	"description": "Displays the potential DPS for all weapons.",
 	"website_url": "https://github.com/bene-labs/Brotato-WeaponDpsDisplay",
 	"dependencies": [],
