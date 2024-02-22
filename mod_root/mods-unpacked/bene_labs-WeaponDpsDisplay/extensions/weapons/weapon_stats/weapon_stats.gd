@@ -51,7 +51,6 @@ func get_dps_text(base_dps : float) -> String:
 	if dps != base_dps:
 		text += get_init_a() + str(base_dps) + col_b
 		text += " (" + a + difference_str + "%" + col_b + ")"  
-
 	return text
 
 
@@ -61,8 +60,8 @@ func get_average_atk_speed(stats: Resource):
 		var additional_cooldown_stats = stats.duplicate()
 		additional_cooldown_stats.cooldown *= stats.additional_cooldown_multiplier
 		var additional_atk_speed = additional_cooldown_stats.get_cooldown_value(additional_cooldown_stats)
-		atk_speed = (atk_speed * (stats.additional_cooldown_every_x_shots - 1.0) + additional_atk_speed) \
-				/ stats.additional_cooldown_every_x_shots
+		atk_speed = (atk_speed * (stats.additional_cooldown_every_x_shots - 1.0) + \
+				additional_atk_speed) / stats.additional_cooldown_every_x_shots
 	return atk_speed
 
 
@@ -93,23 +92,24 @@ func get_average_damage(stats: Resource) -> float:
 	var dmg = stats.damage
 	
 	if stats is RangedWeaponStats:
-		var bounce_damage = dmg
+		var bounce_damage : float = dmg
 		for i in range(stats.bounce):
-			bounce_damage -= bounce_damage * stats.bounce_dmg_reduction
+			bounce_damage = round(bounce_damage - bounce_damage * stats.bounce_dmg_reduction)
 			dmg += max(1, bounce_damage)
 		var on_crit_bounce_damage = bounce_damage
 		if bounces_on_crit > 0:
 			for i in range(bounces_on_crit):
-				on_crit_bounce_damage -= on_crit_bounce_damage * stats.bounce_dmg_reduction
+				on_crit_bounce_damage = round(on_crit_bounce_damage - on_crit_bounce_damage * \
+						stats.bounce_dmg_reduction)
 				dmg += max(1, on_crit_bounce_damage)
-			bounce_damage = bounce_damage - bounce_damage * (stats.piercing_dmg_reduction * stats.crit_chance)
-		var pierce_damage = bounce_damage - bounce_damage * stats.piercing_dmg_reduction
+			bounce_damage = bounce_damage - bounce_damage * (stats.bounce_dmg_reduction * stats.crit_chance)
+		var pierce_damage : float = round(bounce_damage - bounce_damage * stats.piercing_dmg_reduction)
 		for i in range(stats.piercing):
 			dmg += max(1, pierce_damage)
-			pierce_damage -= pierce_damage * stats.piercing_dmg_reduction
+			pierce_damage = round(pierce_damage - pierce_damage * stats.piercing_dmg_reduction)
 		for i in range(pierces_on_crit):
 			dmg += max(1, pierce_damage)
-			pierce_damage -= pierce_damage * stats.piercing_dmg_reduction
+			pierce_damage = round(pierce_damage - pierce_damage * stats.piercing_dmg_reduction)
 		dmg *= stats.nb_projectiles
 	if stats.crit_chance > 0:
 		dmg = dmg * (1 - stats.crit_chance) + round(dmg * stats.crit_damage) * stats.crit_chance
