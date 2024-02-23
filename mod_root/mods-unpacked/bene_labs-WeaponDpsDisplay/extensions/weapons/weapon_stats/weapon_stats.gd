@@ -26,10 +26,10 @@ func get_text(base_stats: Resource) -> String:
 	text += "\n" + Text.text("STAT_FORMATTED", [get_col_a() + tr("WEAPON_DPS") + col_b, \
 			get_dps_text(base_dps)])
 	
-	var stand_still_dps = try_get_stand_still_dps()
-	if stand_still_dps:
-		text += "\n" + Text.text("STAT_FORMATTED", [get_col_a() + tr("STAND_STILL_DPS") + col_b, \
-				get_signed_col_a(stand_still_dps, get_dps()) + str(stand_still_dps) + col_b])
+	#var stand_still_dps = try_get_stand_still_dps()
+	#if stand_still_dps:
+	#	text += "\n" + Text.text("STAT_FORMATTED", [get_col_a() + tr("STAND_STILL_DPS") + col_b, \
+	#			get_signed_col_a(stand_still_dps, get_dps()) + str(stand_still_dps) + col_b])
 	
 	var burn_dps_per_stack = get_burning_dps_pet_stack(self)
 	var max_burn_dps = get_max_burning_dps(self)
@@ -48,7 +48,7 @@ func get_base_dps_text(base_stats: Resource) -> String:
 
 
 func get_dps_text(base_dps : float) -> String:
-	var dps = get_dps() if RunData.effects["can_attack_while_moving"] else 0.0
+	var dps = get_dps() #if RunData.effects["can_attack_while_moving"] else 0.0
 	var a = get_signed_col_a(dps, base_dps)
 	var difference_str = ("+" if dps > base_dps else "") + \
 			str(stepify((dps - base_dps) / base_dps * 100, 0.01))
