@@ -1,5 +1,6 @@
 keys,en,de
 WEAPON_DPS,DPS,DPS
 WEAPON_BURN_DPS,Burn DPS,Brandschaden DPS
+STAND_STILL_DPS,Stand still DPS,Stillstand DPS
 BURN_STACK_DPS,Burn DPS per stack,Brand-DPS pro Stack
 BURN_MAX_DPS,Maximum burn DPS,Maximaler Brand-DPS
