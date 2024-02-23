@@ -1,11 +1,22 @@
 extends "res://weapons/weapon_stats/weapon_stats.gd"
 
-
+# Relevant efects
 var pierces_on_crit = 0
 var bounces_on_crit = 0
 var projectiles_on_impact_stats = null
 var atk_speed_override = null
 
+# Vars needed to init new stats
+var weapon_id : String
+var sets : Array
+var effects : Array
+var is_structure : bool
+
+func set_creation_data(weapon_id:String = "", sets:Array = [], effects:Array = [], is_structure:bool = false):
+	self.weapon_id = weapon_id
+	self.sets = sets
+	self.effects = effects
+	self.is_structure = is_structure
 
 func set_effects(effects : Array):
 	for effect in effects:
@@ -26,10 +37,10 @@ func get_text(base_stats: Resource) -> String:
 	text += "\n" + Text.text("STAT_FORMATTED", [get_col_a() + tr("WEAPON_DPS") + col_b, \
 			get_dps_text(base_dps)])
 	
-	#var stand_still_dps = try_get_stand_still_dps()
-	#if stand_still_dps:
-	#	text += "\n" + Text.text("STAT_FORMATTED", [get_col_a() + tr("STAND_STILL_DPS") + col_b, \
-	#			get_signed_col_a(stand_still_dps, get_dps()) + str(stand_still_dps) + col_b])
+	var stand_still_dps = try_get_stand_still_dps(base_stats)
+	if stand_still_dps:
+		text += "\n" + Text.text("STAT_FORMATTED", [get_col_a() + tr("STAND_STILL_DPS") + col_b, \
+				get_signed_col_a(stand_still_dps, get_dps()) + str(stand_still_dps) + col_b])
 	
 	var burn_dps_per_stack = get_burning_dps_pet_stack(self)
 	var max_burn_dps = get_max_burning_dps(self)
@@ -48,7 +59,8 @@ func get_base_dps_text(base_stats: Resource) -> String:
 
 
 func get_dps_text(base_dps : float) -> String:
-	var dps = get_dps() #if RunData.effects["can_attack_while_moving"] else 0.0
+	var dps = get_dps() if RunData.effects["can_attack_while_moving"] or \
+			 (is_instance_valid(TempStats.player) and TempStats.player.not_moving_bonuses_applied) else 0.0
 	var a = get_signed_col_a(dps, base_dps)
 	var difference_str = ("+" if dps > base_dps else "") + \
 			str(stepify((dps - base_dps) / base_dps * 100, 0.01))
@@ -59,28 +71,35 @@ func get_dps_text(base_dps : float) -> String:
 	return text
 
 
-func try_get_stand_still_dps():
-	var stand_still_damage_multiplier = null
-	var stand_still_cooldown_multiplier = null
-	
+func try_get_stand_still_dps(base_stats):
+	var stand_still_damage_mod = 0.0
+	var stand_still_atk_spd_mod = 0.0
+
 	for temp_stat_while_not_moving in RunData.effects["temp_stats_while_not_moving"]:
 		if temp_stat_while_not_moving[0] == "stat_percent_damage":
-			stand_still_damage_multiplier = temp_stat_while_not_moving[1] / 100.0
+			stand_still_damage_mod += temp_stat_while_not_moving[1]
 		elif temp_stat_while_not_moving[0] == "stat_attack_speed":
-			stand_still_cooldown_multiplier = temp_stat_while_not_moving[1] / 100.0
-	if stand_still_damage_multiplier == null and stand_still_cooldown_multiplier == null:
+			stand_still_atk_spd_mod += temp_stat_while_not_moving[1]
+	if stand_still_damage_mod == 0.0 and stand_still_atk_spd_mod == 0.0:
 		return false
-	
-	var stand_still_stats = self.duplicate()
-	if stand_still_damage_multiplier:
-		stand_still_stats.damage += stand_still_stats.damage * stand_still_damage_multiplier
-	if stand_still_cooldown_multiplier:
-		stand_still_stats.cooldown *= 1.0 / (1.0 + stand_still_cooldown_multiplier)
-	return stand_still_stats.get_dps()
+
+	if is_instance_valid(TempStats.player) and TempStats.player.not_moving_bonuses_applied:
+		return get_dps()
+
+	RunData.effects["stat_percent_damage"] += stand_still_damage_mod
+	RunData.effects["stat_attack_speed"] += stand_still_atk_spd_mod
+	var stand_still_dps = \
+			(WeaponService.init_ranged_stats(base_stats, weapon_id, sets, effects, is_structure) \
+			if base_stats is RangedWeaponStats else \
+			WeaponService.init_melee_stats(base_stats, weapon_id, sets, effects, is_structure) \
+			).get_dps()
+	RunData.effects["stat_percent_damage"] -= stand_still_damage_mod
+	RunData.effects["stat_attack_speed"] -= stand_still_atk_spd_mod
+	return stand_still_dps
 
 
 func get_average_atk_speed(stats: Resource):
-	var atk_speed = stats.atk_speed_override if stats.atk_speed_override else stats.get_cooldown_value(self)
+	var atk_speed = stats.atk_speed_override if stats.atk_speed_override else stats.get_cooldown_value(stats)
 	if stats.additional_cooldown_every_x_shots > 0:
 		var additional_cooldown_stats = stats.duplicate()
 		additional_cooldown_stats.cooldown *= stats.additional_cooldown_multiplier
