@@ -72,30 +72,27 @@ func get_dps_text(base_dps : float) -> String:
 
 
 func try_get_stand_still_dps(base_stats):
-	var stand_still_damage_mod = 0.0
-	var stand_still_atk_spd_mod = 0.0
-
-	for temp_stat_while_not_moving in RunData.effects["temp_stats_while_not_moving"]:
-		if temp_stat_while_not_moving[0] == "stat_percent_damage":
-			stand_still_damage_mod += temp_stat_while_not_moving[1]
-		elif temp_stat_while_not_moving[0] == "stat_attack_speed":
-			stand_still_atk_spd_mod += temp_stat_while_not_moving[1]
-	if stand_still_damage_mod == 0.0 and stand_still_atk_spd_mod == 0.0:
+	if RunData.effects["temp_stats_while_not_moving"].size() == 0:
 		return false
-
 	if is_instance_valid(TempStats.player) and TempStats.player.not_moving_bonuses_applied:
 		return get_dps()
+	
+	for temp_stat_while_not_moving in RunData.effects["temp_stats_while_not_moving"]:
+		if temp_stat_while_not_moving[0] in RunData.effects:
+			RunData.effects[temp_stat_while_not_moving[0]] += temp_stat_while_not_moving[1]
+		else:
+			RunData.effects[temp_stat_while_not_moving[0]] = temp_stat_while_not_moving[1]
 
-	RunData.effects["stat_percent_damage"] += stand_still_damage_mod
-	RunData.effects["stat_attack_speed"] += stand_still_atk_spd_mod
 	var stand_still_dps = \
 			(WeaponService.init_ranged_stats(base_stats, weapon_id, sets, effects, is_structure) \
 			if base_stats is RangedWeaponStats else \
 			WeaponService.init_melee_stats(base_stats, weapon_id, sets, effects, is_structure) \
 			).get_dps()
-	RunData.effects["stat_percent_damage"] -= stand_still_damage_mod
-	RunData.effects["stat_attack_speed"] -= stand_still_atk_spd_mod
-	return stand_still_dps
+	
+	for temp_stat_while_not_moving in RunData.effects["temp_stats_while_not_moving"]:
+		RunData.effects[temp_stat_while_not_moving[0]] -= temp_stat_while_not_moving[1]
+	
+	return stand_still_dps if stand_still_dps != get_dps() else false
 
 
 func get_average_atk_speed(stats: Resource):
