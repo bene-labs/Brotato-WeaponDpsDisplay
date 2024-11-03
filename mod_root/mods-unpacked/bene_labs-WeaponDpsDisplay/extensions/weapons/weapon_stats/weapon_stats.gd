@@ -10,28 +10,30 @@ var atk_speed_override = null
 var weapon_id : String
 var sets : Array
 var effects : Array
-var is_structure : bool
+var is_special_spawn : bool
+var player_index : int
 
-func set_creation_data(weapon_id:String = "", sets:Array = [], effects:Array = [], is_structure:bool = false):
+func set_creation_data(weapon_id:String = "", sets:Array = [], effects:Array = [], is_special_spawn:bool = false):
 	self.weapon_id = weapon_id
 	self.sets = sets
 	self.effects = effects
-	self.is_structure = is_structure
+	self.is_special_spawn = is_special_spawn
 
 func set_effects(effects : Array):
 	for effect in effects:
 		match effect.key.to_lower():
-			"effect_pierce_on_crit":
+			"pierce_on_crit":
 				pierces_on_crit = effect.value
-			"effect_bounce_on_crit":
+			"bounce_on_crit":
 				bounces_on_crit = effect.value
 			"effect_projectiles_on_hit", "effect_slow_projectiles_on_hit", "effect_lightning_on_hit":
 				projectiles_on_impact_stats = effect.weapon_stats
 				projectiles_on_impact_stats.nb_projectiles = effect.value
 
 
-func get_text(base_stats: Resource) -> String:
-	var text = .get_text(base_stats)
+func get_text(base_stats: Resource, player_index: int, effects: Array = []) -> String:
+	self.player_index = player_index
+	var text = .get_text(base_stats, player_index, effects)
 	var base_dps = get_base_dps(base_stats)
 
 	text += "\n" + Text.text("STAT_FORMATTED", [get_col_a() + tr("WEAPON_DPS") + col_b, \
@@ -59,7 +61,7 @@ func get_base_dps_text(base_stats: Resource) -> String:
 
 
 func get_dps_text(base_dps : float) -> String:
-	var dps = get_dps() if RunData.effects["can_attack_while_moving"] or \
+	var dps = get_dps() if RunData.get_player_effect("can_attack_while_moving", player_index) or \
 			 (is_instance_valid(TempStats.player) and TempStats.player.not_moving_bonuses_applied) else 0.0
 	var a = get_signed_col_a(dps, base_dps)
 	var difference_str = ("+" if dps > base_dps else "") + \
@@ -72,35 +74,38 @@ func get_dps_text(base_dps : float) -> String:
 
 
 func try_get_stand_still_dps(base_stats):
-	if RunData.effects["temp_stats_while_not_moving"].size() == 0:
+	if RunData.get_player_effect("temp_stats_while_not_moving", player_index).size() == 0:
 		return false
-	if is_instance_valid(TempStats.player) and TempStats.player.not_moving_bonuses_applied:
-		return get_dps()
 	
-	for temp_stat_while_not_moving in RunData.effects["temp_stats_while_not_moving"]:
-		if temp_stat_while_not_moving[0] in RunData.effects:
-			RunData.effects[temp_stat_while_not_moving[0]] += temp_stat_while_not_moving[1]
-		else:
-			RunData.effects[temp_stat_while_not_moving[0]] = temp_stat_while_not_moving[1]
+	if TempStats.get_player_not_moving_bonuses_applied(player_index):
+		for temp_stat in TempStats.player_stats[player_index].values():
+			if temp_stat != 0:
+				return get_dps()
+	
+	for temp_stat_while_not_moving in RunData.get_player_effect("temp_stats_while_not_moving", player_index):
+		TempStats.add_stat(temp_stat_while_not_moving[0], temp_stat_while_not_moving[1], player_index)
 
+	var init_stats := WeaponServiceInitStatsArgs.new()
+	init_stats.weapon_id = weapon_id
+	init_stats.sets = sets
+	init_stats.effects = effects
 	var stand_still_dps = \
-			(WeaponService.init_ranged_stats(base_stats, weapon_id, sets, effects, is_structure) \
+			(WeaponService.init_ranged_stats(base_stats, player_index, false, init_stats ) \
 			if base_stats is RangedWeaponStats else \
-			WeaponService.init_melee_stats(base_stats, weapon_id, sets, effects, is_structure) \
+			WeaponService.init_melee_stats(base_stats, player_index, init_stats) \
 			).get_dps()
 	
-	for temp_stat_while_not_moving in RunData.effects["temp_stats_while_not_moving"]:
-		RunData.effects[temp_stat_while_not_moving[0]] -= temp_stat_while_not_moving[1]
-	
+	for temp_stat_while_not_moving in RunData.get_player_effect("temp_stats_while_not_moving", player_index):
+		TempStats.remove_stat(temp_stat_while_not_moving[0], temp_stat_while_not_moving[1], player_index)
 	return stand_still_dps if stand_still_dps != get_dps() else false
 
 
 func get_average_atk_speed(stats: Resource):
-	var atk_speed = stats.atk_speed_override if stats.atk_speed_override else stats.get_cooldown_value(stats)
+	var atk_speed = stats.atk_speed_override if stats.atk_speed_override else stats.get_cooldown_value(player_index, 1.0)
 	if stats.additional_cooldown_every_x_shots > 0:
 		var additional_cooldown_stats = stats.duplicate()
 		additional_cooldown_stats.cooldown *= stats.additional_cooldown_multiplier
-		var additional_atk_speed = additional_cooldown_stats.get_cooldown_value(additional_cooldown_stats)
+		var additional_atk_speed = additional_cooldown_stats.get_cooldown_value(player_index, 1.0)
 		atk_speed = (atk_speed * (stats.additional_cooldown_every_x_shots - 1.0) + \
 				additional_atk_speed) / stats.additional_cooldown_every_x_shots
 	return atk_speed
@@ -112,9 +117,9 @@ func get_dps(extra_damage : int = 0) -> float:
 	var dps = stepify(get_average_damage(self) / atk_speed, 0.01)
 	
 	if projectiles_on_impact_stats != null:
-		var scale_damage = WeaponService.get_scaling_stats_value(projectiles_on_impact_stats.scaling_stats)
-		projectiles_on_impact_stats.atk_speed_override = get_cooldown_value(self)
-		dps += projectiles_on_impact_stats.get_dps(scale_damage)
+		projectiles_on_impact_stats.scaling_stats = WeaponService._apply_weapon_scaling_stat_effects(projectiles_on_impact_stats.scaling_stats, player_index)
+		projectiles_on_impact_stats.atk_speed_override = get_cooldown_value(player_index, 1.0)
+		dps += projectiles_on_impact_stats.get_dps(player_index)
 	damage -= extra_damage
 	return dps
 
@@ -124,7 +129,7 @@ func get_base_dps(base_stats: Resource) -> float:
 	var base_dps = stepify(get_average_damage(base_stats) / atk_speed, 0.01)
 
 	if projectiles_on_impact_stats != null:
-		projectiles_on_impact_stats.atk_speed_override = get_cooldown_value(base_stats)
+		projectiles_on_impact_stats.atk_speed_override = get_cooldown_value(player_index, 1.0)
 		base_dps += projectiles_on_impact_stats.get_dps()
 	return base_dps
 
@@ -165,7 +170,7 @@ func get_average_damage(stats: Resource) -> float:
 
 func get_burning_dps_pet_stack(stats: Resource) -> float:
 	var burning = stats.burning_data
-	var burn_speed = 1.0 - (RunData.effects["burning_cooldown_reduction"] / 100.0)
+	var burn_speed = 1.0 - (RunData.get_player_effect("burning_cooldown_reduction", player_index) / 100.0)
 	var atk_speed = get_average_atk_speed(stats)
 	var burn_damage_per_second = burning.damage / burn_speed if burning.chance > 0.0 else 0.0
 	
@@ -176,7 +181,7 @@ func get_burning_dps_pet_stack(stats: Resource) -> float:
 # I might still change this later, not sure how helpful it really is...
 func get_max_burning_dps(stats: Resource) -> float:
 	var burning = stats.burning_data
-	var burn_speed = 1.0 - (RunData.effects["burning_cooldown_reduction"] / 100.0)
+	var burn_speed = 1.0 - (RunData.get_player_effect("burning_cooldown_reduction", player_index) / 100.0)
 	var atk_speed = get_average_atk_speed(stats)
 	var new_burn_damage_per_second = min(1.0, burning.chance) * burning.damage / atk_speed / burn_speed
 	new_burn_damage_per_second *= 1 + burning.spread
