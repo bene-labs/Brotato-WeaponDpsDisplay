@@ -61,7 +61,7 @@ func get_base_dps_text(base_stats: Resource) -> String:
 
 
 func get_dps_text(base_dps : float) -> String:
-	var dps = get_dps() if RunData.get_player_effect("can_attack_while_moving", player_index) or \
+	var dps = get_dps() if RunData.get_player_effect(Keys.can_attack_while_moving_hash, player_index) or \
 			 (is_instance_valid(TempStats.player) and TempStats.player.not_moving_bonuses_applied) else 0.0
 	var a = get_signed_col_a(dps, base_dps)
 	var difference_str = ("+" if dps > base_dps else "") + \
@@ -74,7 +74,7 @@ func get_dps_text(base_dps : float) -> String:
 
 
 func try_get_stand_still_dps(base_stats):
-	if RunData.get_player_effect("temp_stats_while_not_moving", player_index).size() == 0:
+	if RunData.get_player_effect(Keys.temp_stats_while_not_moving_hash, player_index).size() == 0:
 		return false
 	
 	if TempStats.get_player_not_moving_bonuses_applied(player_index):
@@ -82,7 +82,7 @@ func try_get_stand_still_dps(base_stats):
 			if temp_stat != 0:
 				return get_dps()
 	
-	for temp_stat_while_not_moving in RunData.get_player_effect("temp_stats_while_not_moving", player_index):
+	for temp_stat_while_not_moving in RunData.get_player_effect(Keys.temp_stats_while_not_moving_hash, player_index):
 		TempStats.add_stat(temp_stat_while_not_moving[0], temp_stat_while_not_moving[1], player_index)
 
 	var init_stats := WeaponServiceInitStatsArgs.new()
@@ -95,7 +95,7 @@ func try_get_stand_still_dps(base_stats):
 			WeaponService.init_melee_stats(base_stats, player_index, init_stats) \
 			).get_dps()
 	
-	for temp_stat_while_not_moving in RunData.get_player_effect("temp_stats_while_not_moving", player_index):
+	for temp_stat_while_not_moving in RunData.get_player_effect(Keys.temp_stats_while_not_moving_hash, player_index):
 		TempStats.remove_stat(temp_stat_while_not_moving[0], temp_stat_while_not_moving[1], player_index)
 	return stand_still_dps if stand_still_dps != get_dps() else false
 
@@ -170,7 +170,7 @@ func get_average_damage(stats: Resource) -> float:
 
 func get_burning_dps_pet_stack(stats: Resource) -> float:
 	var burning = stats.burning_data
-	var burn_speed = 1.0 - (RunData.get_player_effect("burning_cooldown_reduction", player_index) / 100.0)
+	var burn_speed = 1.0 - (RunData.get_player_effect(Keys.burning_cooldown_reduction_hash, player_index) / 100.0)
 	var atk_speed = get_average_atk_speed(stats)
 	var burn_damage_per_second = burning.damage / burn_speed if burning.chance > 0.0 else 0.0
 	
@@ -181,7 +181,7 @@ func get_burning_dps_pet_stack(stats: Resource) -> float:
 # I might still change this later, not sure how helpful it really is...
 func get_max_burning_dps(stats: Resource) -> float:
 	var burning = stats.burning_data
-	var burn_speed = 1.0 - (RunData.get_player_effect("burning_cooldown_reduction", player_index) / 100.0)
+	var burn_speed = 1.0 - (RunData.get_player_effect(Keys.burning_cooldown_reduction_hash, player_index) / 100.0)
 	var atk_speed = get_average_atk_speed(stats)
 	var new_burn_damage_per_second = min(1.0, burning.chance) * burning.damage / atk_speed / burn_speed
 	new_burn_damage_per_second *= 1 + burning.spread
