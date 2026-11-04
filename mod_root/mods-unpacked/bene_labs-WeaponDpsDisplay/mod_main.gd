@@ -7,9 +7,17 @@ func _init(modLoader = ModLoader):
 	ModLoaderLog.info("Init", MENUSTRING_LOG)
 
 	modLoader.install_script_extension(\
+		"res://mods-unpacked/bene_labs-WeaponDpsDisplay/extensions/entities/units/player/player.gd")
+	modLoader.install_script_extension(\
+		"res://mods-unpacked/bene_labs-WeaponDpsDisplay/extensions/singletons/temp_stats.gd")
+	modLoader.install_script_extension(\
 		"res://mods-unpacked/bene_labs-WeaponDpsDisplay/extensions/items/global/weapon_data.gd")
 	modLoader.install_script_extension(\
 		"res://mods-unpacked/bene_labs-WeaponDpsDisplay/extensions/weapons/weapon_stats/weapon_stats.gd")
+	modLoader.install_script_extension(\
+		"res://mods-unpacked/bene_labs-WeaponDpsDisplay/extensions/ui/menus/shop/shop_item.gd")
+	modLoader.install_script_extension(\
+		"res://mods-unpacked/bene_labs-WeaponDpsDisplay/extensions/ui/menus/shop/item_description.gd")
 
 	var dir = ModLoaderMod.get_unpacked_dir() + MOD_DIR
 	ModLoaderMod.add_translation(dir + "translation/weapon_dps_display_text.de.translation")
