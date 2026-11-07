@@ -94,7 +94,6 @@ func get_dps_impact_text(p_item_data: ItemParentData) -> String:
 	var signed_col_a = get_signed_col_a(new_dps, prev_dps)
 	var difference_str = ("+" if new_dps > prev_dps else "") + \
 			str(stepify((new_dps - prev_dps) / prev_dps * 100, 0.01))
-	print(prev_dps, " => ", new_dps)
 	var text = col_a + tr("DPS_IMPACT") + ": " + col_b
 	text += signed_col_a + difference_str + "%" + col_b
 	return text
