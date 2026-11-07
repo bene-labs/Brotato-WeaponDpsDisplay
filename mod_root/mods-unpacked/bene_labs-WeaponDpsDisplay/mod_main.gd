@@ -15,8 +15,6 @@ func _init(modLoader = ModLoader):
 	modLoader.install_script_extension(\
 		"res://mods-unpacked/bene_labs-WeaponDpsDisplay/extensions/weapons/weapon_stats/weapon_stats.gd")
 	modLoader.install_script_extension(\
-		"res://mods-unpacked/bene_labs-WeaponDpsDisplay/extensions/ui/menus/shop/shop_item.gd")
-	modLoader.install_script_extension(\
 		"res://mods-unpacked/bene_labs-WeaponDpsDisplay/extensions/ui/menus/shop/item_description.gd")
 
 	var dir = ModLoaderMod.get_unpacked_dir() + MOD_DIR

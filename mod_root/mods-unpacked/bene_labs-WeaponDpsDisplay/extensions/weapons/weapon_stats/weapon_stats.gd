@@ -11,9 +11,9 @@ var weapon_id : String
 var sets : Array
 var effects : Array
 var is_special_spawn : bool
-var player_index : int
+var player_index := 0
 
-func set_creation_data(weapon_id:String = "", sets:Array = [], effects:Array = [], is_special_spawn:bool = false):
+func set_creation_data(weapon_id: String = "", sets: Array = [], effects: Array = [], is_special_spawn: bool = false):
 	self.weapon_id = weapon_id
 	self.sets = sets
 	self.effects = effects
@@ -135,6 +135,8 @@ func get_base_dps(base_stats: Resource) -> float:
 
 
 func get_average_damage(stats: Resource) -> float:
+	
+	
 	var dmg = stats.damage
 	
 	if min(1.0, stats.crit_chance) > 0:
