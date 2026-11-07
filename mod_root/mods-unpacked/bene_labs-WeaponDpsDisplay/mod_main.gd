@@ -11,8 +11,6 @@ func _init(modLoader = ModLoader):
 	modLoader.install_script_extension(\
 		"res://mods-unpacked/bene_labs-WeaponDpsDisplay/extensions/singletons/temp_stats.gd")
 	modLoader.install_script_extension(\
-		"res://mods-unpacked/bene_labs-WeaponDpsDisplay/extensions/items/global/weapon_data.gd")
-	modLoader.install_script_extension(\
 		"res://mods-unpacked/bene_labs-WeaponDpsDisplay/extensions/weapons/weapon_stats/weapon_stats.gd")
 	modLoader.install_script_extension(\
 		"res://mods-unpacked/bene_labs-WeaponDpsDisplay/extensions/ui/menus/shop/item_description.gd")
