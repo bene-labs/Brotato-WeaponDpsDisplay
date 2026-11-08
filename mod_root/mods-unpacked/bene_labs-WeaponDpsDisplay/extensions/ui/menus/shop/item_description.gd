@@ -81,10 +81,10 @@ func get_dps_impact_text(p_item_data: ItemParentData) -> String:
 		new_dps += stats.get_dps()
 	
 	if p_item_data.get_category() == Category.ITEM:
-		RunData.remove_item(p_item_data, PLAYER_IDX)
+		RunData.remove_item(p_item_data, PLAYER_IDX, true, false)
 	elif p_item_data.get_category() == Category.WEAPON:
 		var idx = RunData.get_player_weapons_ref(0).size() - 1
-		RunData.remove_weapon_by_index(idx, 0)
+		RunData.remove_weapon_by_index(idx, PLAYER_IDX)
 	
 	RunData._emit_stats_updated()
 	
