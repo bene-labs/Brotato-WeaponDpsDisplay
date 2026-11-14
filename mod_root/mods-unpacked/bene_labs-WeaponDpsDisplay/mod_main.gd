@@ -7,6 +7,8 @@ func _init(modLoader = ModLoader):
 	ModLoaderLog.info("Init", MENUSTRING_LOG)
 
 	modLoader.install_script_extension(\
+		"res://mods-unpacked/bene_labs-WeaponDpsDisplay/extensions/singletons/challenge_service.gd")
+	modLoader.install_script_extension(\
 		"res://mods-unpacked/bene_labs-WeaponDpsDisplay/extensions/entities/units/player/player.gd")
 	modLoader.install_script_extension(\
 		"res://mods-unpacked/bene_labs-WeaponDpsDisplay/extensions/singletons/temp_stats.gd")
