@@ -1,7 +1,7 @@
 {
 	"name": "WeaponDpsDisplay",
 	"namespace": "bene_labs",
-	"version_number": "1.2.0",
+	"version_number": "1.2.1",
 	"description": "Displays the potential DPS for all weapons and shows what impact items and weapons will have before you buy them.",
 	"website_url": "https://github.com/bene-labs/Brotato-WeaponDpsDisplay",
 	"dependencies": [],

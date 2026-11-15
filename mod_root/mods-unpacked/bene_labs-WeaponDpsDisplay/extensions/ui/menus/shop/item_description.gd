@@ -51,6 +51,10 @@ func set_item(item_data: ItemParentData, player_index: int, item_count: = 1) -> 
 	
 
 func get_dps_impact_text(p_item_data: ItemParentData) -> String:
+	if p_item_data.my_id == "item_axolotl":
+		return ""
+	
+	
 	var prev_dps := _calc_total_weapons_dps()
 	
 	if prev_dps == 0:
